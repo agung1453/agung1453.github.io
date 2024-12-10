@@ -2,13 +2,11 @@
 <html lang="en">
 
 <meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; img-src 'self'; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; media-src 'self'; object-src 'self'; child-src 'self'; form-action 'none'; base-uri 'self'" />
+
 <meta http-equiv="X-XSS-Protection"  content="1;mode=block" always>
 <meta http-equiv="Referrer-Policy" content="no-referrer, strict-origin-when-cross-origin"><head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>/</title><!-- Begin Jekyll SEO tag v2.7.1 -->
+ 
+  <title>🌏</title><!-- Begin Jekyll SEO tag v2.7.1 -->
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="/" />
 <meta property="og:locale" content="en_US" />
@@ -22,7 +20,18 @@
 <script type="application/ld+json">
 {"description":"A jekyll theme inspired by linux consoles for hackers, developers and script kiddies.","url":"https://agung1453.github.io/jekyll-theme-console-demo-light/","@type":"WebSite","headline":"/","name":"agung1453.github.io","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" type="text/css" href="assets/main-light.css"></head>
+<link rel="stylesheet" type="text/css" href="assets/main-light.css">
+
+ <style>
+    #search-bar {
+      margin-bottom: 5px;
+      width: 50%;
+      padding: 5px;
+      border: 1px solid #555;
+    }
+  </style>
+
+</head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2S0FCLG6D"></script>
 <script>
@@ -32,6 +41,10 @@
 
   gtag('config', 'G-T2S0FCLG6D');
   </script>
+  
+  
+  
+  
   <body>
     <div class="container"><header>
   <div class="menu">
@@ -47,20 +60,140 @@
 <h1 id="welcome">Selamat datang</h1>
 
 <p>Hello World 👋 🌍!</p>
+<br>
+  <input type="text" id="search-bar" placeholder="Cari nama, isi, atau tanggal..." oninput="filterData()">
+  <div id="data-container">
+    <!-- Data pengguna akan ditampilkan di sini -->
+  </div>
+  <br>
+  <div class="pagination">
+    <button id="prev-button" onclick="changePage(-1)">Previous</button>
+    <span id="page-info"></span>
+    <button id="next-button" onclick="changePage(1)">Next</button>
+  </div>
+  <div id="details-container" style="display: none;">
+    <!-- Detail data akan ditampilkan di sini -->
+  </div>
+  
 
-  <br />  <!-- add line break if there is any content --><ul>
-  	<li>[ 2024-12-09 ] <a href="https://agung1453.github.io/AbsensiBulanan.github.io/">Absensi Bulanan</a>
-    </li>
-
-<li>[ 2019-11-06 ] <a href="https://x.com/agung_1453">Twitter</a>
-    </li>
-</ul>
+  <br />  <!-- add line break if there is any content -->
     </main><footer>
   Ikuti kami di <a href="https://twitter.com/agung_1453">twitter</a>
 </footer>
 </div>
+
+<script>
+    let data = []; // Menyimpan data JSON
+    let filteredData = []; // Data setelah difilter
+    let currentPage = 1;
+    const itemsPerPage = 3;
+
+    // Memuat data JSON
+    async function loadJSONData() {
+      try {
+        const response = await fetch('data/data.json');
+        if (!response.ok) {
+          throw new Error('Gagal memuat data JSON');
+        }
+        data = await response.json();
+        filteredData = data; // Awalnya, filteredData sama dengan semua data
+        renderPage();
+      } catch (error) {
+        console.error(error.message);
+        document.getElementById('data-container').innerHTML = '<p>Gagal memuat data.</p>';
+      }
+    }
+
+    // Menampilkan data pada halaman tertentu
+    function renderPage() {
+      const container = document.getElementById('data-container');
+      const detailsContainer = document.getElementById('details-container');
+      container.innerHTML = '';
+      detailsContainer.style.display = 'none'; // Sembunyikan detail saat render ulang
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedData = filteredData.slice(start, end);
+
+      paginatedData.forEach(item => {
+        const userDiv = document.createElement('div');
+        userDiv.classList.add('user-item');
+        userDiv.innerHTML = `
+          <small>- [ ${item.tanggal} ]</small>
+          <small><u>${item.nama}</u></small>
+        `;
+        userDiv.onclick = () => showDetails(item.id); // Menampilkan detail saat diklik
+        container.appendChild(userDiv);
+      });
+
+      updatePaginationInfo();
+    }
+
+    // Mengupdate informasi pagination
+    function updatePaginationInfo() {
+      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+      document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+
+      // Menonaktifkan tombol jika di halaman pertama atau terakhir
+      document.getElementById('prev-button').disabled = currentPage === 1;
+      document.getElementById('next-button').disabled = currentPage === totalPages;
+    }
+
+    // Mengganti halaman
+    function changePage(direction) {
+      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+      currentPage = Math.min(Math.max(currentPage + direction, 1), totalPages);
+      renderPage();
+    }
+
+    // Memfilter data berdasarkan input pencarian
+    function filterData() {
+      const query = document.getElementById('search-bar').value.toLowerCase();
+      filteredData = data.filter(item => 
+        item.nama.toLowerCase().includes(query) ||
+        item.isi.toLowerCase().includes(query) ||
+        item.tanggal.includes(query)
+      );
+      currentPage = 1; // Reset ke halaman pertama
+      renderPage();
+    }
+
+    // Menampilkan detail data berdasarkan ID
+    function showDetails(id) {
+      const detailsContainer = document.getElementById('details-container');
+      const selectedData = data.find(item => item.id === id);
+
+      if (selectedData) {
+        detailsContainer.innerHTML = `
+          <div class="details">
+            <small>- [ ${selectedData.tanggal} ]</small> 
+            <small><u>${selectedData.nama}</u></small>
+            <br>
+            <br>
+            <small>${selectedData.isi}</small>
+            <br>
+            <br>
+            <button onclick="resetView()">Kembali</button>
+          </div>
+        `;
+        detailsContainer.style.display = 'block'; // Tampilkan detail
+        document.getElementById('data-container').style.display = 'none'; // Sembunyikan data
+        document.querySelector('.pagination').style.display = 'none'; // Sembunyikan pagination
+      }
+    }
+
+    // Reset tampilan ke daftar data
+    function resetView() {
+      document.getElementById('details-container').style.display = 'none'; // Sembunyikan detail
+      document.getElementById('data-container').style.display = 'block'; // Tampilkan data
+      document.querySelector('.pagination').style.display = 'block'; // Tampilkan pagination
+    }
+
+    // Memuat data saat halaman selesai dimuat
+    window.onload = loadJSONData;
+  </script>
+  
+  
   </body>
-
-
   </html>
   
