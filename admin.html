@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #000;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Input Data JSON</h2>
+    <form id="dataForm">
+        <label for="id">ID:</label>
+        <input type="text" id="id" required><br><br>
+        <label for="tanggal">Tanggal:</label>
+        <input type="date" id="tanggal" required><br><br>
+        <label for="nama">Nama:</label>
+        <input type="text" id="nama" required><br><br>
+        <label for="isi">Isi:</label>
+        <textarea id="isi" rows="4" required></textarea><br><br>
+        <button type="submit">Tambah Data</button>
+        <button type="button" id="saveButton" class="hidden">Save</button>
+    </form>
+
+    <h3>Data Tabel</h3>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tanggal</th>
+                <th>Nama</th>
+                <th>Isi</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data akan ditambahkan di sini -->
+        </tbody>
+    </table>
+
+    <h3>JSON Data (Editable)</h3>
+    <textarea id="dataDisplay" oninput="updateTableFromTextarea()"></textarea>
+
+    <script>
+        let dataArray = [];
+        let editIndex = -1;
+
+        // Fungsi untuk memuat data dari data.json
+        async function loadDataFromJSON() {
+            try {
+                const response = await fetch("data/data.json");
+                const data = await response.json();
+                dataArray = data;
+                tampilkanData();
+            } catch (error) {
+                console.error("Gagal memuat data JSON:", error);
+            }
+        }
+
+        // Tampilkan data yang sudah ada di file JSON saat halaman dimuat
+        document.addEventListener("DOMContentLoaded", loadDataFromJSON);
+
+        // Fungsi untuk menambah data
+        document.getElementById("dataForm").addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const id = document.getElementById("id").value;
+            const tanggal = document.getElementById("tanggal").value;
+            const nama = document.getElementById("nama").value;
+            const isi = document.getElementById("isi").value;
+
+            const newData = { id, tanggal, nama, isi };
+
+            if (editIndex >= 0) {
+                dataArray[editIndex] = newData;
+                editIndex = -1;
+                document.getElementById("saveButton").classList.add("hidden");
+            } else {
+                dataArray.unshift(newData);
+            }
+
+            tampilkanData();
+            document.getElementById("dataForm").reset();
+        });
+
+        // Fungsi untuk menampilkan data di tabel dan textarea
+        function tampilkanData() {
+            const tableBody = document.getElementById("dataTable").querySelector("tbody");
+            tableBody.innerHTML = "";
+
+            dataArray.forEach((data, index) => {
+                const row = tableBody.insertRow();
+
+                row.insertCell(0).textContent = data.id;
+                row.insertCell(1).textContent = data.tanggal;
+                row.insertCell(2).textContent = data.nama;
+                row.insertCell(3).textContent = data.isi;
+
+                const actionsCell = row.insertCell(4);
+                actionsCell.innerHTML = `
+                    <button onclick="editData(${index})">Edit</button>
+                    <button onclick="hapusData(${index})">Hapus</button>
+                `;
+            });
+
+            document.getElementById("dataDisplay").value = JSON.stringify(dataArray, null, 2);
+        }
+
+        // Fungsi untuk mengedit data
+        function editData(index) {
+            const data = dataArray[index];
+            document.getElementById("id").value = data.id;
+            document.getElementById("tanggal").value = data.tanggal;
+            document.getElementById("nama").value = data.nama;
+            document.getElementById("isi").value = data.isi;
+
+            editIndex = index;
+            document.getElementById("saveButton").classList.remove("hidden");
+        }
+
+        // Fungsi untuk menyimpan data yang telah diedit
+        document.getElementById("saveButton").addEventListener("click", () => {
+            const id = document.getElementById("id").value;
+            const tanggal = document.getElementById("tanggal").value;
+            const nama = document.getElementById("nama").value;
+            const isi = document.getElementById("isi").value;
+
+            const updatedData = { id, tanggal, nama, isi };
+            dataArray[editIndex] = updatedData;
+
+            editIndex = -1;
+            document.getElementById("saveButton").classList.add("hidden");
+            tampilkanData();
+        });
+
+        // Fungsi untuk menghapus data
+        function hapusData(index) {
+            dataArray.splice(index, 1);
+            tampilkanData();
+        }
+
+        // Fungsi untuk memperbarui tabel dari textarea
+        function updateTableFromTextarea() {
+            try {
+                const json = JSON.parse(document.getElementById("dataDisplay").value);
+                if (Array.isArray(json)) {
+                    dataArray = json;
+                    tampilkanData();
+                }
+            } catch (error) {
+                console.error("JSON tidak valid");
+            }
+        }
+    </script>
+</body>
+      </html>
