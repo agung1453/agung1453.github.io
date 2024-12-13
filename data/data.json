@@ -1,5 +1,14 @@
 [
-  { "id": 1, "tanggal": "2024-12-01", "nama": "Absensi Bulanan", "isi": "https://agung1453.github.io/AbsensiBulanan.github.io/" },
-  { "id": 2, "tanggal": "2024-12-02", "nama": "Ai", "isi": "https://chatgpt.com/" },
-    { "id": 3, "tanggal": "2024-12-02", "nama": "Test", "isi": "https://chatgpt.com/" }
+  {
+    "id": "4",
+    "tanggal": "2024-12-13",
+    "nama": "IPTV Play List",
+    "isi": "https://bit.ly/3ZQhm7x\n<br>\nhttps://raw.githubusercontent.com/agung1453/myscript/refs/heads/main/Indonesia.m3u"
+  },
+  {
+    "id": 1,
+    "tanggal": "2024-12-01",
+    "nama": "Absensi Bulanan",
+    "isi": "https://agung1453.github.io/AbsensiBulanan.github.io/"
+  }
 ]
