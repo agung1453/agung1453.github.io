@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
  
-  <title>🔥</title><!-- Begin Jekyll SEO tag v2.7.1 -->
+  <title>🌏</title><!-- Begin Jekyll SEO tag v2.7.1 -->
 <meta name="generator" content="Jekyll v3.9.0" />
 <meta property="og:title" content="/" />
 <meta property="og:locale" content="en_US" />
@@ -50,12 +50,7 @@
   <body>
     <div class="container"><header>
   <div class="menu">
-    <ul>
-      <li><a href="#">/agung</a></li>
-      <li><a href="#">/short link</a></li>
-      <li><a href="#">/Tentang</a></li>
-      <li><a href="#">/Kontak</a></li>
-    </ul>
+    <ul><li><a href="#">/</a></li><li><a href="#">/agung</a></li><li><a href="#">/Tentang</a></li><li><a href="#">/Kontak</a></li></ul>
   </div>
 </header>
 <main>
@@ -66,7 +61,7 @@
 
 <h1 id="welcome">Selamat datang</h1>
 
-<p>Hello World 👋 🌍!</p>
+<div id="typewriter"></div>
 <br>
   <input type="text" id="search-bar" placeholder="Cari nama, isi, atau tanggal..." oninput="filterData()">
   <div id="data-container">
@@ -200,7 +195,45 @@
     window.onload = loadJSONData;
   </script>
   
-  
+<script>
+        async function fetchData() {
+            try {
+                const response = await fetch('data/quots.json'); // Ganti dengan lokasi file JSON
+                return await response.json();
+            } catch (error) {
+                console.error("Error fetching JSON data:", error);
+                return [];
+            }
+        }
+
+        async function typewriterEffect() {
+            const data = await fetchData();
+            if (data.length === 0) return;
+
+            const container = document.getElementById('typewriter');
+            let index = 0;
+            let charIndex = 0;
+
+            function type() {
+                if (charIndex < data[index].length) {
+                    container.textContent += data[index].charAt(charIndex);
+                    charIndex++;
+                    setTimeout(type, 50); // Kecepatan efek ketikan
+                } else {
+                    setTimeout(() => {
+                        container.textContent = ""; // Hapus teks sebelumnya
+                        charIndex = 0;
+                        index = (index + 1) % data.length; // Ulang dari awal jika selesai
+                        type();
+                    }, 2000); // Tunggu sebelum pindah ke data berikutnya
+                }
+            }
+
+            type();
+        }
+
+        typewriterEffect();
+    </script>
   </body>
   </html>
   
