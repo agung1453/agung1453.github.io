@@ -6,7 +6,7 @@ self.addEventListener('install', event => {
         '/',              // Halaman utama
         '/Pengelola File IndexedDB/index.html',    // Halaman index
         '/',     // File CSS (jika ada)
-        '/',     // File JavaScript (jika ada)
+        '/Pengelola File IndexedDB/service-worker.js',     // File JavaScript (jika ada)
         '/'       // Gambar (jika ada)
       ]);
     })
