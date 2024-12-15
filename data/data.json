@@ -1,5 +1,11 @@
 [
   {
+    "id": "1",
+    "tanggal": "2024-12-15",
+    "nama": "Edit file ovpn",
+    "isi": "tun-mtu 1500\nmssfix 1450\nport 1194\ndhcp-option DNS 8.8.8.8\ndhcp-option DNS 1.1.1.1\nsndbuf 524288\nrcvbuf 524288\nkeepalive 10 120\ncipher AES-128-CBC\nuser nobody\ngroup nogroup\nproto udp\nremote ganti-url-server 443 tcp"
+  },
+  {
     "id": "4",
     "tanggal": "2024-12-13",
     "nama": "IPTV Play List",
