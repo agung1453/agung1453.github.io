@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengelola File IndexedDB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 2px 0;
+            padding: 4px;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .preview {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 360px; /* Rasio 16:9 */
+            position: relative;
+            background-color: #000;
+        }
+        video, img, audio {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        video {
+            aspect-ratio: 16 / 9;
+        }
+        .empty-preview {
+            color: #fff;
+            font-size: 18px;
+        }
+        .actions button {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pengelola File IndexedDB</h1>
+    <input type="file" id="fileInput" multiple>
+    <button onclick="addFiles()">Tambah File</button>
+    <input type="text" id="searchInput" placeholder="Cari file..." oninput="searchFiles()">
+    <table>
+        <thead>
+            <tr>
+                <th>Nama File</th>
+                <th>Ukuran (MB)</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="fileTable"></tbody>
+    </table>
+    <div class="preview" id="filePreview">
+        <p class="empty-preview">Preview File</p>
+    </div>
+
+    <script>
+        const dbName = "FileManagerDB";
+        const storeName = "files";
+        let db;
+
+        // Inisialisasi IndexedDB
+        function initDB() {
+            const request = indexedDB.open(dbName, 1);
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "name" });
+                }
+            };
+
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                loadFiles();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error membuka database:", event.target.error);
+            };
+        }
+
+        // Tambahkan file ke IndexedDB
+        function addFiles() {
+            const fileInput = document.getElementById("fileInput");
+            const files = fileInput.files;
+
+            const transaction = db.transaction(storeName, "readwrite");
+            const store = transaction.objectStore(storeName);
+
+            Array.from(files).forEach((file) => {
+                let fileName = file.name;
+
+                // Potong nama file menjadi 5 karakter pertama
+                fileName = fileName.split(".")[0].slice(0, 5);
+                if (!file.name.includes(".")) {
+                    fileName += ".mp4";
+                }
+
+                const fileData = {
+                    name: fileName,
+                    size: (file.size / (1024 * 1024)).toFixed(2), // Ukuran dalam MB
+                    content: file
+                };
+                store.put(fileData);
+            });
+
+            transaction.oncomplete = () => {
+                fileInput.value = ""; // Reset input file
+                loadFiles();
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Error menambah file:", event.target.error);
+            };
+        }
+
+        // Muat file dari IndexedDB
+        function loadFiles() {
+            const transaction = db.transaction(storeName, "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.getAll();
+
+            request.onsuccess = (event) => {
+                displayFiles(event.target.result);
+            };
+
+            request.onerror = (event) => {
+                console.error("Error memuat file:", event.target.error);
+            };
+        }
+
+        // Tampilkan file di tabel
+        function displayFiles(files) {
+            const tableBody = document.getElementById("fileTable");
+            tableBody.innerHTML = "";
+
+            files.forEach((file) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${file.name}</td>
+                    <td>${file.size} MB</td>
+                    <td class="actions">
+                        <button onclick="viewFile('${file.name}')">Lihat</button>
+                        <button onclick="deleteFile('${file.name}')">Hapus</button>
+                        <button onclick="renameFile('${file.name}')">Ganti Nama</button>
+                        <button onclick="saveFile('${file.name}')">Simpan</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Lihat file di browser
+        function viewFile(fileName) {
+            const transaction = db.transaction(storeName, "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.get(fileName);
+
+            request.onsuccess = (event) => {
+                const file = event.target.result;
+                const previewContainer = document.getElementById("filePreview");
+                const url = URL.createObjectURL(file.content);
+
+                let previewElement = `<p class="empty-preview">Tidak dapat menampilkan file ini.</p>`;
+                if (file.content.type.startsWith("image/")) {
+                    previewElement = `<img src="${url}" alt="${file.name}">`;
+                } else if (file.content.type.startsWith("video/") || !file.content.type) {
+                    // Tampilkan video jika tipe tidak diketahui
+                    previewElement = `<video controls src="${url}" autoplay></video>`;
+                } else if (file.content.type.startsWith("audio/")) {
+                    previewElement = `<audio controls src="${url}"></audio>`;
+                }
+
+                previewContainer.innerHTML = previewElement;
+            };
+
+            request.onerror = (event) => {
+                console.error("Error melihat file:", event.target.error);
+            };
+        }
+
+        // Hapus file dari IndexedDB
+        function deleteFile(fileName) {
+            const transaction = db.transaction(storeName, "readwrite");
+            const store = transaction.objectStore(storeName);
+            store.delete(fileName);
+
+            transaction.oncomplete = () => {
+                loadFiles();
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Error menghapus file:", event.target.error);
+            };
+        }
+
+        // Ganti nama file
+        function renameFile(oldName) {
+            const newName = prompt("Masukkan nama baru:", oldName);
+            if (!newName) return;
+
+            const transaction = db.transaction(storeName, "readwrite");
+            const store = transaction.objectStore(storeName);
+            const request = store.get(oldName);
+
+            request.onsuccess = (event) => {
+                const file = event.target.result;
+                store.delete(oldName);
+                file.name = newName;
+                store.put(file);
+                loadFiles();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error mengganti nama file:", event.target.error);
+            };
+        }
+
+        // Simpan file ke perangkat
+        function saveFile(fileName) {
+            const transaction = db.transaction(storeName, "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.get(fileName);
+
+            request.onsuccess = (event) => {
+                const file = event.target.result.content;
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(file);
+                a.download = fileName;
+                a.click();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error menyimpan file:", event.target.error);
+            };
+        }
+
+        // Cari file berdasarkan nama
+        function searchFiles() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const transaction = db.transaction(storeName, "readonly");
+            const store = transaction.objectStore(storeName);
+            const request = store.getAll();
+
+            request.onsuccess = (event) => {
+                const files = event.target.result.filter((file) =>
+                    file.name.toLowerCase().includes(query)
+                );
+                displayFiles(files);
+            };
+        }
+
+        // Inisialisasi
+        initDB();
+    </script>
+</body>
+</html>
