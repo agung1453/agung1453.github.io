@@ -4,7 +4,7 @@ self.addEventListener('install', event => {
     caches.open('my-cache').then(cache => {
       return cache.addAll([
         '/',              // Halaman utama
-        '/index.html',    // Halaman index
+        '/Pengelola File IndexedDB/index.html',    // Halaman index
         '/',     // File CSS (jika ada)
         '/',     // File JavaScript (jika ada)
         '/'       // Gambar (jika ada)
